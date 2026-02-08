@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     title: "a quiet place to think",
     description: "share your thoughts anonymously",
   },
+  icons: {
+    icon: "/icon.svg",
+  },
   robots: {
     index: true,
     follow: true,

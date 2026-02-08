@@ -114,13 +114,13 @@ export function InputBar({ onPosted }: InputBarProps) {
   const fontCls = font === "serif" ? "font-serif" : font === "mono" ? "font-mono" : "font-sans-serif";
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg)]">
-      <div className="max-w-2xl mx-auto px-4 pt-3 pb-3">
+    <div className="z-40">
+      <div className="pt-3 pb-3">
         {error && (
           <p className="text-center text-xs text-[var(--muted)] mb-2">{error}</p>
         )}
         <div className="rounded-full bg-[var(--input-bg)] shadow-lg transition-all duration-200">
-          <div className="flex items-end gap-3 px-5 py-2.5">
+          <div className="flex items-end gap-3 pl-5 pr-[11px] py-2.5">
             <textarea
               ref={textareaRef}
               value={content}

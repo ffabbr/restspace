@@ -38,9 +38,10 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 pb-32">
+      <div className="max-w-2xl mx-auto px-4 pt-12 pb-12">
+        <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
         {/* Mobile filter row */}
-        <div className="flex items-center gap-1 mb-8 md:hidden">
+        <div className="flex items-center gap-1 mb-8 mt-4 md:hidden">
           {categories.map((c) => (
             <button
               key={c.key}
@@ -57,7 +58,6 @@ export default function Home() {
         </div>
         <ThoughtFeed refreshKey={refreshKey} filter={filter} />
       </div>
-      <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
     </main>
   );
 }

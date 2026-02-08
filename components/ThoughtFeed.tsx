@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 interface Thought {
   id: number;
@@ -47,12 +47,26 @@ export function ThoughtFeed({
 }) {
   const [thoughts, setThoughts] = useState<Thought[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newIds, setNewIds] = useState<Set<number>>(new Set());
+  const knownIdsRef = useRef<Set<number>>(new Set());
 
   const fetchThoughts = useCallback(async () => {
     try {
       const res = await fetch("/api/thoughts");
       if (res.ok) {
-        const data = await res.json();
+        const data: Thought[] = await res.json();
+        const incoming = new Set(data.map((t) => t.id));
+        const fresh = new Set<number>();
+        if (knownIdsRef.current.size > 0) {
+          for (const id of incoming) {
+            if (!knownIdsRef.current.has(id)) fresh.add(id);
+          }
+        }
+        knownIdsRef.current = incoming;
+        if (fresh.size > 0) {
+          setNewIds(fresh);
+          setTimeout(() => setNewIds(new Set()), 600);
+        }
         setThoughts(data);
       }
     } catch (e) {
@@ -108,10 +122,12 @@ export function ThoughtFeed({
         {thoughts.map((thought) => {
           const visible = filter === "all" || thought.category === filter;
 
+          const isNew = newIds.has(thought.id);
+
           return (
             <div
               key={thought.id}
-              className="thought-item border-b border-[var(--border)] last:border-b-0"
+              className={`thought-item border-b border-[var(--border)] last:border-b-0${isNew ? " thought-slide-in" : ""}`}
               style={{
                 opacity: visible ? 1 : 0,
                 maxHeight: visible ? "1000px" : "0px",
