@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
 import { saveChallenge, createUser, getAuthenticatorsByUserId } from "@/lib/db";
 import { cookies } from "next/headers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`auth:${ip}`, 20, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const userId = crypto.randomUUID();
     await createUser(userId);

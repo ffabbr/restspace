@@ -3,9 +3,16 @@ import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { getChallenge, deleteChallenge, saveAuthenticator } from "@/lib/db";
 import { createSession, sessionCookie } from "@/lib/session";
 import { cookies } from "next/headers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`auth:${ip}`, 20, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const cookieStore = await cookies();
@@ -35,7 +42,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Verification failed" }, { status: 400 });
     }
 
-    const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+    const { credential } = verification.registrationInfo;
+
+    if (!challengeData.user_id) {
+      return NextResponse.json({ error: "Invalid challenge" }, { status: 400 });
+    }
 
     await saveAuthenticator(
       crypto.randomUUID(),

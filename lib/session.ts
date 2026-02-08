@@ -1,14 +1,20 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "restspace-dev-secret-change-me");
+function getSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  return new TextEncoder().encode(secret || "restspace-dev-secret-change-me");
+}
 
 export async function createSession(userId: string): Promise<string> {
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
-    .sign(SECRET);
+    .sign(getSecret());
   return token;
 }
 
@@ -17,7 +23,7 @@ export async function getSession(): Promise<{ userId: string } | null> {
   const token = cookieStore.get("session")?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return { userId: payload.userId as string };
   } catch {
     return null;

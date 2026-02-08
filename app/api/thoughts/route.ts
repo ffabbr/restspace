@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { getThoughts, createThought } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`thoughts-get:${ip}`, 60, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const thoughts = await getThoughts();
     return NextResponse.json(thoughts);
@@ -13,6 +20,12 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`thoughts-post:${ip}`, 10, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const session = await getSession();
     if (!session) {

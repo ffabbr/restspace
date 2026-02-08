@@ -9,8 +9,15 @@ import {
 import { createSession, sessionCookie } from "@/lib/session";
 import { cookies } from "next/headers";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const rl = rateLimit(`auth:${ip}`, 20, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const cookieStore = await cookies();

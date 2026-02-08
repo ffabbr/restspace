@@ -33,6 +33,8 @@ async function setup() {
     CREATE TABLE IF NOT EXISTS thoughts (
       id SERIAL PRIMARY KEY,
       content TEXT NOT NULL,
+      font TEXT NOT NULL DEFAULT 'sans-serif',
+      category TEXT NOT NULL DEFAULT 'thought',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
