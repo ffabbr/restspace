@@ -2,9 +2,9 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET;
   if (!secret && process.env.NODE_ENV === "production") {
-    throw new Error("JWT_SECRET environment variable is required in production");
+    throw new Error("JWT_SECRET or SUPABASE_JWT_SECRET environment variable is required in production");
   }
   return new TextEncoder().encode(secret || "restspace-dev-secret-change-me");
 }

@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 
-const USE_SQLITE = !process.env.DATABASE_URL;
+const DB_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const USE_SQLITE = !DB_URL;
 
 // --- Types ---
 
@@ -76,7 +77,7 @@ async function getSqlite() {
 // --- Neon (production) ---
 
 function getNeon() {
-  return neon(process.env.DATABASE_URL!);
+  return neon(DB_URL!);
 }
 
 // --- Table init ---
