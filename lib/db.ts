@@ -1,6 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-import Database from "better-sqlite3";
-import path from "path";
 
 const USE_SQLITE = !process.env.DATABASE_URL;
 
@@ -33,10 +31,13 @@ export interface AuthenticatorRow {
 
 // --- SQLite (local dev) ---
 
-let _sqlite: Database.Database | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _sqlite: any = null;
 
-function getSqlite(): Database.Database {
+async function getSqlite() {
   if (!_sqlite) {
+    const Database = (await import("better-sqlite3")).default;
+    const path = await import("path");
     const dbPath = path.join(process.cwd(), "local.db");
     _sqlite = new Database(dbPath);
     _sqlite.pragma("journal_mode = WAL");
@@ -85,7 +86,7 @@ let _tablesReady = false;
 export async function ensureTables() {
   if (_tablesReady) return;
   if (USE_SQLITE) {
-    getSqlite();
+    await getSqlite();
     _tablesReady = true;
     return;
   }
@@ -102,7 +103,7 @@ export async function ensureTables() {
 export async function getThoughts(limit = 100, offset = 0): Promise<Thought[]> {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ? OFFSET ?").all(limit, offset) as Thought[];
   }
   const sql = getNeon();
@@ -112,7 +113,7 @@ export async function getThoughts(limit = 100, offset = 0): Promise<Thought[]> {
 export async function createThought(content: string, font: string, category: string): Promise<Thought> {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     const stmt = db.prepare("INSERT INTO thoughts (content, font, category) VALUES (?, ?, ?) RETURNING id, content, font, category, created_at || 'Z' as created_at");
     return stmt.get(content, font, category) as Thought;
   }
@@ -124,7 +125,7 @@ export async function createThought(content: string, font: string, category: str
 export async function createUser(id: string) {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     db.prepare("INSERT OR IGNORE INTO users (id) VALUES (?)").run(id);
     return;
   }
@@ -142,7 +143,7 @@ export async function saveAuthenticator(
 ) {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     db.prepare("INSERT INTO authenticators (id, user_id, credential_id, credential_public_key, counter, transports) VALUES (?, ?, ?, ?, ?, ?)").run(id, userId, credentialId, publicKey, counter, transports);
     return;
   }
@@ -153,7 +154,7 @@ export async function saveAuthenticator(
 export async function getAuthenticatorsByUserId(userId: string): Promise<AuthenticatorRow[]> {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     return db.prepare("SELECT * FROM authenticators WHERE user_id = ?").all(userId) as AuthenticatorRow[];
   }
   const sql = getNeon();
@@ -163,7 +164,7 @@ export async function getAuthenticatorsByUserId(userId: string): Promise<Authent
 export async function getAuthenticatorByCredentialId(credentialId: string): Promise<AuthenticatorRow | null> {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     return (db.prepare("SELECT * FROM authenticators WHERE credential_id = ?").get(credentialId) as AuthenticatorRow) || null;
   }
   const sql = getNeon();
@@ -174,7 +175,7 @@ export async function getAuthenticatorByCredentialId(credentialId: string): Prom
 export async function updateAuthenticatorCounter(credentialId: string, counter: number) {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     db.prepare("UPDATE authenticators SET counter = ? WHERE credential_id = ?").run(counter, credentialId);
     return;
   }
@@ -185,7 +186,7 @@ export async function updateAuthenticatorCounter(credentialId: string, counter: 
 export async function saveChallenge(sessionId: string, challenge: string, userId?: string) {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     db.prepare("INSERT OR REPLACE INTO challenges (id, challenge, user_id) VALUES (?, ?, ?)").run(sessionId, challenge, userId ?? null);
     return;
   }
@@ -196,7 +197,7 @@ export async function saveChallenge(sessionId: string, challenge: string, userId
 export async function getChallenge(sessionId: string): Promise<ChallengeRow | null> {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     return (db.prepare("SELECT * FROM challenges WHERE id = ?").get(sessionId) as ChallengeRow) || null;
   }
   const sql = getNeon();
@@ -207,7 +208,7 @@ export async function getChallenge(sessionId: string): Promise<ChallengeRow | nu
 export async function deleteChallenge(sessionId: string) {
   await ensureTables();
   if (USE_SQLITE) {
-    const db = getSqlite();
+    const db = await getSqlite();
     db.prepare("DELETE FROM challenges WHERE id = ?").run(sessionId);
     return;
   }
