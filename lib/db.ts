@@ -158,6 +158,26 @@ export async function getThoughts(limit = 100, offset = 0): Promise<Thought[]> {
   return (await sql`SELECT id, content, font, category, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`) as Thought[];
 }
 
+export async function getThoughtsBefore(before: number, limit = 30): Promise<Thought[]> {
+  await ensureTables();
+  if (USE_SQLITE) {
+    const db = await getSqlite();
+    return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts WHERE id < ? ORDER BY created_at DESC LIMIT ?").all(before, limit) as Thought[];
+  }
+  const sql = getPostgres();
+  return (await sql`SELECT id, content, font, category, created_at FROM thoughts WHERE id < ${before} ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
+}
+
+export async function getThoughtsLatest(limit = 30): Promise<Thought[]> {
+  await ensureTables();
+  if (USE_SQLITE) {
+    const db = await getSqlite();
+    return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ?").all(limit) as Thought[];
+  }
+  const sql = getPostgres();
+  return (await sql`SELECT id, content, font, category, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
+}
+
 export async function createThought(content: string, font: string, category: string): Promise<Thought> {
   await ensureTables();
   if (USE_SQLITE) {

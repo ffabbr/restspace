@@ -12,6 +12,8 @@ interface Thought {
 
 export type Category = "all" | "thought" | "diary" | "aspiration";
 
+const PAGE_SIZE = 30;
+
 function fontClass(font: string) {
   if (font === "serif") return "font-serif";
   if (font === "mono") return "font-mono";
@@ -47,12 +49,16 @@ export function ThoughtFeed({
 }) {
   const [thoughts, setThoughts] = useState<Thought[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [newIds, setNewIds] = useState<Set<number>>(new Set());
   const knownIdsRef = useRef<Set<number>>(new Set());
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const fetchThoughts = useCallback(async () => {
+  // Fetch the latest page (initial load + refresh)
+  const fetchLatest = useCallback(async () => {
     try {
-      const res = await fetch("/api/thoughts");
+      const res = await fetch(`/api/thoughts?limit=${PAGE_SIZE}`);
       if (res.ok) {
         const data: Thought[] = await res.json();
         const incoming = new Set(data.map((t) => t.id));
@@ -68,6 +74,7 @@ export function ThoughtFeed({
           setTimeout(() => setNewIds(new Set()), 600);
         }
         setThoughts(data);
+        setHasMore(data.length >= PAGE_SIZE);
       }
     } catch (e) {
       console.error("Failed to fetch thoughts:", e);
@@ -76,14 +83,61 @@ export function ThoughtFeed({
     }
   }, []);
 
-  useEffect(() => {
-    fetchThoughts();
-  }, [fetchThoughts, refreshKey]);
+  // Load next page using cursor
+  const fetchMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const lastId = thoughts[thoughts.length - 1]?.id;
+      if (!lastId) return;
+      const res = await fetch(`/api/thoughts?before=${lastId}&limit=${PAGE_SIZE}`);
+      if (res.ok) {
+        const data: Thought[] = await res.json();
+        if (data.length > 0) {
+          setThoughts((prev) => {
+            const existingIds = new Set(prev.map((t) => t.id));
+            const unique = data.filter((t) => !existingIds.has(t.id));
+            return [...prev, ...unique];
+          });
+          for (const t of data) knownIdsRef.current.add(t.id);
+        }
+        setHasMore(data.length >= PAGE_SIZE);
+      }
+    } catch (e) {
+      console.error("Failed to load more thoughts:", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [thoughts, loadingMore, hasMore]);
 
+  // Initial load + refresh when new thought posted
   useEffect(() => {
-    const interval = setInterval(fetchThoughts, 15000);
+    fetchLatest();
+  }, [fetchLatest, refreshKey]);
+
+  // Poll for new thoughts
+  useEffect(() => {
+    const interval = setInterval(fetchLatest, 15000);
     return () => clearInterval(interval);
-  }, [fetchThoughts]);
+  }, [fetchLatest]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchMore();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [fetchMore]);
 
   if (loading) {
     return (
@@ -154,6 +208,14 @@ export function ThoughtFeed({
           );
         })}
       </div>
+
+      {/* Sentinel for infinite scroll */}
+      <div ref={sentinelRef} className="h-1" />
+      {loadingMore && (
+        <div className="flex items-center justify-center py-8">
+          <div className="w-4 h-4 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
+        </div>
+      )}
     </div>
   );
 }

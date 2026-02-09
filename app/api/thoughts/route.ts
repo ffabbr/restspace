@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getThoughts, createThought, getDbDebugInfo } from "@/lib/db";
+import { getThoughtsLatest, getThoughtsBefore, createThought, getDbDebugInfo } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { containsHateSpeech } from "@/lib/moderation";
@@ -14,7 +14,14 @@ export async function GET(req: Request) {
   }
 
   try {
-    const thoughts = await getThoughts();
+    const { searchParams } = new URL(req.url);
+    const before = searchParams.get("before");
+    const limit = Math.min(Number(searchParams.get("limit")) || 30, 50);
+
+    const thoughts = before
+      ? await getThoughtsBefore(Number(before), limit)
+      : await getThoughtsLatest(limit);
+
     return NextResponse.json(thoughts);
   } catch (e) {
     console.error("Failed to fetch thoughts:", getDbDebugInfo(), e);
