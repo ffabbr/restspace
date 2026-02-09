@@ -1,31 +1,31 @@
 import { neon } from "@neondatabase/serverless";
 
-const DB_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-const DB_URL_SOURCE = process.env.DATABASE_URL
-  ? "DATABASE_URL"
-  : process.env.POSTGRES_URL
-    ? "POSTGRES_URL"
-    : "none";
+function pickDbUrl(): { url: string | undefined; source: string } {
+  const candidates: Array<[string, string | undefined]> = [
+    ["DATABASE_URL", process.env.DATABASE_URL],
+    // Supabase often provides these; prefer non-pooling when available.
+    ["POSTGRES_URL_NON_POOLING", process.env.POSTGRES_URL_NON_POOLING],
+    ["POSTGRES_PRISMA_URL", process.env.POSTGRES_PRISMA_URL],
+    ["POSTGRES_URL", process.env.POSTGRES_URL],
+  ];
+
+  for (const [source, value] of candidates) {
+    const trimmed = value?.trim();
+    if (trimmed) return { url: trimmed, source };
+  }
+  return { url: undefined, source: "none" };
+}
+
+const { url: DB_URL, source: DB_URL_SOURCE } = pickDbUrl();
 const USE_SQLITE = !DB_URL;
 
-let _loggedDbInfo = false;
-
-function logDbInfoOnce() {
-  if (_loggedDbInfo || process.env.NODE_ENV !== "production") return;
-  _loggedDbInfo = true;
-
-  if (!DB_URL) {
-    console.error("DB_URL missing; source=none");
-    return;
-  }
-
+export function getDbDebugInfo(): string {
+  if (!DB_URL) return "db=missing";
   try {
     const parsed = new URL(DB_URL);
-    console.error(
-      `DB_URL source=${DB_URL_SOURCE} host=${parsed.host} protocol=${parsed.protocol}`
-    );
+    return `db_source=${DB_URL_SOURCE} db_host=${parsed.host} db_proto=${parsed.protocol}`;
   } catch {
-    console.error(`DB_URL source=${DB_URL_SOURCE} (unparseable URL)`);
+    return `db_source=${DB_URL_SOURCE} db_url=unparseable`;
   }
 }
 
@@ -103,7 +103,6 @@ async function getSqlite() {
 // --- Neon (production) ---
 
 function getNeon() {
-  logDbInfoOnce();
   return neon(DB_URL!);
 }
 

@@ -6,6 +6,7 @@ import {
   getAuthenticatorByCredentialId,
   updateAuthenticatorCounter,
 } from "@/lib/db";
+import { getDbDebugInfo } from "@/lib/db";
 import { createSession, sessionCookie } from "@/lib/session";
 import { cookies } from "next/headers";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (e) {
-    console.error("Login verify error:", e);
+    console.error("Login verify error:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });
   }
 }

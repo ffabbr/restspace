@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
-import { saveChallenge } from "@/lib/db";
+import { saveChallenge, getDbDebugInfo } from "@/lib/db";
 import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (e) {
-    console.error("Login options error:", e);
+    console.error("Login options error:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Failed to generate options" }, { status: 500 });
   }
 }

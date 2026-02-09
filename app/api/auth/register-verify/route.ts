@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
-import { getChallenge, deleteChallenge, saveAuthenticator } from "@/lib/db";
+import { getChallenge, deleteChallenge, saveAuthenticator, getDbDebugInfo } from "@/lib/db";
 import { createSession, sessionCookie } from "@/lib/session";
 import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (e) {
-    console.error("Register verify error:", e);
+    console.error("Register verify error:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
-import { saveChallenge, createUser, getAuthenticatorsByUserId } from "@/lib/db";
+import { saveChallenge, createUser, getAuthenticatorsByUserId, getDbDebugInfo } from "@/lib/db";
 import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (e) {
-    console.error("Register options error:", e);
+    console.error("Register options error:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Failed to generate options" }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getThoughts, createThought } from "@/lib/db";
+import { getThoughts, createThought, getDbDebugInfo } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const thoughts = await getThoughts();
     return NextResponse.json(thoughts);
   } catch (e) {
-    console.error("Failed to fetch thoughts:", e);
+    console.error("Failed to fetch thoughts:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     const thought = await createThought(trimmed, safeFont, safeCategory);
     return NextResponse.json(thought);
   } catch (e) {
-    console.error("Failed to create thought:", e);
+    console.error("Failed to create thought:", getDbDebugInfo(), e);
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
   }
 }
