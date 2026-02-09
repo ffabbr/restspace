@@ -14,15 +14,16 @@ const categories: { key: Category; label: string }[] = [
 
 const validFilters = new Set<string>(["all", "thought", "diary", "aspiration"]);
 
-function getInitialFilter(): Category {
-  if (typeof window === "undefined") return "all";
-  const param = new URLSearchParams(window.location.search).get("filter");
-  return param && validFilters.has(param) ? (param as Category) : "all";
-}
-
 export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [filter, setFilterState] = useState<Category>(getInitialFilter);
+  const [filter, setFilterState] = useState<Category>("all");
+
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get("filter");
+    if (param && validFilters.has(param)) {
+      setFilterState(param as Category);
+    }
+  }, []);
 
   const setFilter = useCallback((f: Category) => {
     setFilterState(f);
