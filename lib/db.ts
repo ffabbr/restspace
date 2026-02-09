@@ -42,6 +42,8 @@ export interface Thought {
   content: string;
   font: string;
   category: string;
+  color: string;
+  user_id: string | null;
   created_at: string;
 }
 
@@ -93,6 +95,8 @@ async function getSqlite() {
         content TEXT NOT NULL,
         font TEXT NOT NULL DEFAULT 'sans-serif',
         category TEXT NOT NULL DEFAULT 'thought',
+        color TEXT NOT NULL DEFAULT 'default',
+        user_id TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       );
       CREATE TABLE IF NOT EXISTS challenges (
@@ -102,6 +106,14 @@ async function getSqlite() {
         created_at TEXT DEFAULT (datetime('now'))
       );
     `);
+    // Migrations
+    const cols = _sqlite.pragma("table_info(thoughts)") as { name: string }[];
+    if (!cols.some((c: { name: string }) => c.name === "color")) {
+      _sqlite.exec("ALTER TABLE thoughts ADD COLUMN color TEXT NOT NULL DEFAULT 'default'");
+    }
+    if (!cols.some((c: { name: string }) => c.name === "user_id")) {
+      _sqlite.exec("ALTER TABLE thoughts ADD COLUMN user_id TEXT");
+    }
   }
   return _sqlite;
 }
@@ -141,7 +153,9 @@ export async function ensureTables() {
   const sql = getPostgres();
   await sql`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT NOW())`;
   await sql`CREATE TABLE IF NOT EXISTS authenticators (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), credential_id TEXT UNIQUE NOT NULL, credential_public_key TEXT NOT NULL, counter BIGINT NOT NULL DEFAULT 0, transports TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`;
-  await sql`CREATE TABLE IF NOT EXISTS thoughts (id SERIAL PRIMARY KEY, content TEXT NOT NULL, font TEXT NOT NULL DEFAULT 'sans-serif', category TEXT NOT NULL DEFAULT 'thought', created_at TIMESTAMPTZ DEFAULT NOW())`;
+  await sql`CREATE TABLE IF NOT EXISTS thoughts (id SERIAL PRIMARY KEY, content TEXT NOT NULL, font TEXT NOT NULL DEFAULT 'sans-serif', category TEXT NOT NULL DEFAULT 'thought', color TEXT NOT NULL DEFAULT 'default', user_id TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`;
+  await sql`ALTER TABLE thoughts ADD COLUMN IF NOT EXISTS color TEXT NOT NULL DEFAULT 'default'`;
+  await sql`ALTER TABLE thoughts ADD COLUMN IF NOT EXISTS user_id TEXT`;
   await sql`CREATE TABLE IF NOT EXISTS challenges (id TEXT PRIMARY KEY, challenge TEXT NOT NULL, user_id TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`;
   _tablesReady = true;
 }
@@ -152,42 +166,54 @@ export async function getThoughts(limit = 100, offset = 0): Promise<Thought[]> {
   await ensureTables();
   if (USE_SQLITE) {
     const db = await getSqlite();
-    return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ? OFFSET ?").all(limit, offset) as Thought[];
+    return db.prepare("SELECT id, content, font, category, color, user_id, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ? OFFSET ?").all(limit, offset) as Thought[];
   }
   const sql = getPostgres();
-  return (await sql`SELECT id, content, font, category, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`) as Thought[];
+  return (await sql`SELECT id, content, font, category, color, user_id, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`) as Thought[];
 }
 
 export async function getThoughtsBefore(before: number, limit = 30): Promise<Thought[]> {
   await ensureTables();
   if (USE_SQLITE) {
     const db = await getSqlite();
-    return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts WHERE id < ? ORDER BY created_at DESC LIMIT ?").all(before, limit) as Thought[];
+    return db.prepare("SELECT id, content, font, category, color, user_id, created_at || 'Z' as created_at FROM thoughts WHERE id < ? ORDER BY created_at DESC LIMIT ?").all(before, limit) as Thought[];
   }
   const sql = getPostgres();
-  return (await sql`SELECT id, content, font, category, created_at FROM thoughts WHERE id < ${before} ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
+  return (await sql`SELECT id, content, font, category, color, user_id, created_at FROM thoughts WHERE id < ${before} ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
 }
 
 export async function getThoughtsLatest(limit = 30): Promise<Thought[]> {
   await ensureTables();
   if (USE_SQLITE) {
     const db = await getSqlite();
-    return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ?").all(limit) as Thought[];
+    return db.prepare("SELECT id, content, font, category, color, user_id, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ?").all(limit) as Thought[];
   }
   const sql = getPostgres();
-  return (await sql`SELECT id, content, font, category, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
+  return (await sql`SELECT id, content, font, category, color, user_id, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit}`) as Thought[];
 }
 
-export async function createThought(content: string, font: string, category: string): Promise<Thought> {
+export async function createThought(content: string, font: string, category: string, color: string, userId: string): Promise<Thought> {
   await ensureTables();
   if (USE_SQLITE) {
     const db = await getSqlite();
-    const stmt = db.prepare("INSERT INTO thoughts (content, font, category) VALUES (?, ?, ?) RETURNING id, content, font, category, created_at || 'Z' as created_at");
-    return stmt.get(content, font, category) as Thought;
+    const stmt = db.prepare("INSERT INTO thoughts (content, font, category, color, user_id) VALUES (?, ?, ?, ?, ?) RETURNING id, content, font, category, color, user_id, created_at || 'Z' as created_at");
+    return stmt.get(content, font, category, color, userId) as Thought;
   }
   const sql = getPostgres();
-  const rows = await sql`INSERT INTO thoughts (content, font, category) VALUES (${content}, ${font}, ${category}) RETURNING id, content, font, category, created_at`;
+  const rows = await sql`INSERT INTO thoughts (content, font, category, color, user_id) VALUES (${content}, ${font}, ${category}, ${color}, ${userId}) RETURNING id, content, font, category, color, user_id, created_at`;
   return rows[0] as Thought;
+}
+
+export async function updateThought(id: number, content: string, userId: string): Promise<Thought | null> {
+  await ensureTables();
+  if (USE_SQLITE) {
+    const db = await getSqlite();
+    const stmt = db.prepare("UPDATE thoughts SET content = ? WHERE id = ? AND user_id = ? RETURNING id, content, font, category, color, user_id, created_at || 'Z' as created_at");
+    return (stmt.get(content, id, userId) as Thought) || null;
+  }
+  const sql = getPostgres();
+  const rows = await sql`UPDATE thoughts SET content = ${content} WHERE id = ${id} AND user_id = ${userId} RETURNING id, content, font, category, color, user_id, created_at`;
+  return (rows[0] as Thought) || null;
 }
 
 export async function createUser(id: string) {

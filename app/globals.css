@@ -18,6 +18,8 @@
   --selection-bg: #fcf5e8;
   --selection-text: #c36251;
   --input-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  --color-rose: #b14e5a;
+  --color-blue: #4a7e9e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,6 +39,8 @@
     --selection-bg: var(--text);
     --selection-text: var(--bg);
     --input-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --color-rose: #d4838e;
+    --color-blue: #7db4cf;
   }
 }
 

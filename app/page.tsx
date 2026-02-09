@@ -96,7 +96,7 @@ export default function Home() {
       <div className="max-w-2xl mx-auto px-4 pt-12 pb-12">
         {/* InputBar + mobile filters: sticky on mobile, normal flow on desktop */}
         <div className="sticky top-0 z-40 bg-[var(--bg)] md:static md:bg-transparent">
-          <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
+          <InputBar onPosted={() => setRefreshKey((k) => k + 1)} activeFilter={filter} />
           <div ref={mobileFilterRef} className="relative flex items-center gap-1 pb-4 md:hidden">
             <div
               className="absolute top-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"

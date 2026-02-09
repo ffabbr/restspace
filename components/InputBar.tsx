@@ -7,15 +7,32 @@ import { containsHateSpeech } from "@/lib/moderation";
 const MAX_LENGTH = 2000;
 type Font = "sans-serif" | "serif" | "mono";
 type Category = "thought" | "diary" | "aspiration";
+type Color = "default" | "rose" | "blue";
+
+const colorStyles: Record<Color, string | undefined> = {
+  default: undefined,
+  rose: "var(--color-rose)",
+  blue: "var(--color-blue)",
+};
 
 interface InputBarProps {
   onPosted: () => void;
+  activeFilter?: "all" | "thought" | "diary" | "aspiration";
 }
 
-export function InputBar({ onPosted }: InputBarProps) {
+export function InputBar({ onPosted, activeFilter }: InputBarProps) {
   const [content, setContent] = useState("");
   const [font, setFont] = useState<Font>("sans-serif");
+  const [color, setColor] = useState<Color>("default");
   const [category, setCategory] = useState<Category>("thought");
+
+  useEffect(() => {
+    if (activeFilter && activeFilter !== "all") {
+      setCategory(activeFilter);
+    } else {
+      setCategory("thought");
+    }
+  }, [activeFilter]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [lineCount, setLineCount] = useState(1);
@@ -97,7 +114,7 @@ export function InputBar({ onPosted }: InputBarProps) {
       let res = await fetch("/api/thoughts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: trimmed, font, category }),
+        body: JSON.stringify({ content: trimmed, font, category, color }),
       });
 
       if (res.status === 401) {
@@ -111,7 +128,7 @@ export function InputBar({ onPosted }: InputBarProps) {
         res = await fetch("/api/thoughts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: trimmed, font, category }),
+          body: JSON.stringify({ content: trimmed, font, category, color }),
         });
       }
 
@@ -137,8 +154,9 @@ export function InputBar({ onPosted }: InputBarProps) {
   }
 
   const fontCls = font === "serif" ? "font-serif" : font === "mono" ? "font-mono" : "font-sans-serif";
+  const textColorStyle = colorStyles[color] ? { color: colorStyles[color] } : undefined;
   const isMultiline = lineCount > 1;
-  const showMaximize = lineCount > 4;
+  const showMaximize = lineCount > 2;
 
   const sendButton = (
     <button
@@ -192,6 +210,7 @@ export function InputBar({ onPosted }: InputBarProps) {
                 className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
                            text-[15px] resize-none leading-relaxed py-0.5
                            focus:outline-none ${fontCls}`}
+                style={textColorStyle}
                 disabled={sending}
               />
             </div>
@@ -246,6 +265,21 @@ export function InputBar({ onPosted }: InputBarProps) {
               </button>
             ))}
           </div>
+          <div className="flex items-center gap-1.5">
+            {(["default", "rose", "blue"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setColor(c)}
+                className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                  color === c ? "ring-2 ring-offset-1 ring-[var(--muted)]" : "hover:scale-110"
+                }`}
+                style={{
+                  backgroundColor: c === "default" ? "var(--text)" : colorStyles[c],
+                }}
+                aria-label={c}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -257,49 +291,99 @@ export function InputBar({ onPosted }: InputBarProps) {
             if (e.target === e.currentTarget) setShowExpanded(false);
           }}
         >
-          <div className="w-full max-w-2xl mx-4 bg-[var(--input-bg)] rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
-            <div className="flex items-center justify-between px-5 pt-4 pb-2">
-              <span className="text-xs text-[var(--muted)]">
-                {content.length}/{MAX_LENGTH}
-              </span>
-              <button
-                onClick={() => setShowExpanded(false)}
-                className="w-6 h-6 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] transition-colors duration-150"
-                aria-label="close editor"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+          <div className="w-full max-w-2xl mx-4 flex flex-col items-center animate-fade-in">
+            <div className="w-full bg-[var(--input-bg)] rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <span className="text-xs text-[var(--muted)]">
+                  {content.length}/{MAX_LENGTH}
+                </span>
+                <button
+                  onClick={() => setShowExpanded(false)}
+                  className="w-6 h-6 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] transition-colors duration-150"
+                  aria-label="close editor"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="px-5 pb-4">
+                <textarea
+                  ref={expandedTextareaRef}
+                  value={content}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\n{3,}/g, "\n\n");
+                    if (val.length <= MAX_LENGTH) {
+                      setContent(val);
+                      setError("");
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setShowExpanded(false);
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder="what's on your mind?"
+                  className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
+                             text-[15px] resize-none leading-relaxed min-h-[200px] max-h-[60vh]
+                             focus:outline-none ${fontCls}`}
+                  style={textColorStyle}
+                  disabled={sending}
+                />
+              </div>
+              <div className="flex justify-end px-5 pb-4">
+                {sendButton}
+              </div>
             </div>
-            <div className="px-5 pb-4">
-              <textarea
-                ref={expandedTextareaRef}
-                value={content}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\n{3,}/g, "\n\n");
-                  if (val.length <= MAX_LENGTH) {
-                    setContent(val);
-                    setError("");
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setShowExpanded(false);
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="what's on your mind?"
-                className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
-                           text-[15px] resize-none leading-relaxed min-h-[200px] max-h-[60vh]
-                           focus:outline-none ${fontCls}`}
-                disabled={sending}
-              />
-            </div>
-            <div className="flex justify-end px-5 pb-4">
-              {sendButton}
+            <div className="flex items-center gap-3 px-2 pt-3">
+              <div className="flex items-center gap-1">
+                {(["thought", "diary", "aspiration"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCategory(c)}
+                    className={`px-2.5 py-1 text-[11px] transition-colors duration-150 ${
+                      category === c
+                        ? "text-white"
+                        : "text-white/50 hover:text-white"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1">
+                {(["sans-serif", "serif", "mono"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFont(f)}
+                    className={`px-2 py-1 text-[11px] transition-colors duration-150 ${
+                      font === f
+                        ? "text-white"
+                        : "text-white/50 hover:text-white"
+                    } ${f === "serif" ? "font-serif" : f === "mono" ? "font-mono" : "font-sans-serif"}`}
+                  >
+                    {f === "sans-serif" ? "sans" : f}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {(["default", "rose", "blue"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setColor(c)}
+                    className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                      color === c ? "ring-2 ring-offset-1 ring-white/60" : "hover:scale-110"
+                    }`}
+                    style={{
+                      backgroundColor: c === "default" ? "#e5e5e5" : colorStyles[c],
+                    }}
+                    aria-label={c}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
