@@ -168,13 +168,13 @@ export function InputBar({ onPosted }: InputBarProps) {
         )}
         <div
           className={`bg-[var(--input-bg)] shadow-lg transition-all duration-200 ${
-            isMultiline ? "rounded-2xl" : "rounded-full"
+            isMultiline ? "rounded-[1.4rem]" : "rounded-full"
           }`}
         >
           <div className={`flex items-end gap-3 pr-[11px] py-2.5 ${
             isMultiline ? "pl-4" : "pl-5"
           }`}>
-            <div className="relative flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <textarea
                 ref={textareaRef}
                 value={content}
@@ -192,10 +192,12 @@ export function InputBar({ onPosted }: InputBarProps) {
                            focus:outline-none ${fontCls}`}
                 disabled={sending}
               />
+            </div>
+            <div className="flex flex-col items-center gap-1">
               {showMaximize && (
                 <button
                   onClick={() => setShowExpanded(true)}
-                  className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center
+                  className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center
                              text-[var(--muted)] hover:text-[var(--text)] transition-colors duration-150"
                   aria-label="expand editor"
                 >
@@ -207,8 +209,8 @@ export function InputBar({ onPosted }: InputBarProps) {
                   </svg>
                 </button>
               )}
+              {sendButton}
             </div>
-            {sendButton}
           </div>
         </div>
         <div className="flex items-center gap-3 px-2 pt-2">
