@@ -2,12 +2,17 @@ import postgres from "postgres";
 
 function pickDbUrl(): { url: string | undefined; source: string } {
   const candidates: Array<[string, string | undefined]> = [
-    // Allow explicit override even when platform-managed POSTGRES_* vars exist.
-    ["DATABASE_URL", process.env.DATABASE_URL],
-    // Supabase often provides these; prefer non-pooling when available.
-    ["POSTGRES_URL_NON_POOLING", process.env.POSTGRES_URL_NON_POOLING],
-    ["POSTGRES_PRISMA_URL", process.env.POSTGRES_PRISMA_URL],
+    // Manual override (useful when platform-managed vars are locked).
+    ["DB_OVERRIDE_URL", process.env.DB_OVERRIDE_URL],
+    // Platform-provided connection strings (usually poolers, e.g. port 6543).
+    // These are often more reliable in serverless environments than direct connections.
     ["POSTGRES_URL", process.env.POSTGRES_URL],
+    ["POSTGRES_PRISMA_URL", process.env.POSTGRES_PRISMA_URL],
+    // Direct connection (usually port 5432). May fail DNS in some Vercel regions.
+    ["POSTGRES_URL_NON_POOLING", process.env.POSTGRES_URL_NON_POOLING],
+    // Fallback to generic DATABASE_URL (least specific).
+    // Placed last so specific Supabase vars take precedence if DATABASE_URL is broken/stale.
+    ["DATABASE_URL", process.env.DATABASE_URL],
   ];
 
   for (const [source, value] of candidates) {
