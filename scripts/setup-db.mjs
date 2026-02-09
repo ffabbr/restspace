@@ -6,10 +6,11 @@ async function setup() {
     process.exit(1);
   }
 
+  const sslNoVerify = process.env.PG_SSL_NO_VERIFY === "true";
   const sql = postgres(process.env.DATABASE_URL, {
     max: 1,
     prepare: false,
-    ssl: true,
+    ssl: sslNoVerify ? { rejectUnauthorized: false } : true,
     connect_timeout: 10,
   });
 

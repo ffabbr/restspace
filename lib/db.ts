@@ -2,10 +2,10 @@ import postgres from "postgres";
 
 function pickDbUrl(): { url: string | undefined; source: string } {
   const candidates: Array<[string, string | undefined]> = [
-    ["DATABASE_URL", process.env.DATABASE_URL],
     // Supabase often provides these; prefer non-pooling when available.
     ["POSTGRES_URL_NON_POOLING", process.env.POSTGRES_URL_NON_POOLING],
     ["POSTGRES_PRISMA_URL", process.env.POSTGRES_PRISMA_URL],
+    ["DATABASE_URL", process.env.DATABASE_URL],
     ["POSTGRES_URL", process.env.POSTGRES_URL],
   ];
 
@@ -109,10 +109,11 @@ function getPostgres() {
   if (_pg) return _pg;
 
   // `prepare:false` is important for PgBouncer / Supabase pooler.
+  const sslNoVerify = process.env.PG_SSL_NO_VERIFY === "true";
   _pg = postgres(DB_URL!, {
     max: 3,
     prepare: false,
-    ssl: true,
+    ssl: sslNoVerify ? { rejectUnauthorized: false } : true,
     connect_timeout: 10,
     idle_timeout: 20,
   });
