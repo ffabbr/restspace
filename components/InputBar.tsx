@@ -130,7 +130,7 @@ export function InputBar({ onPosted }: InputBarProps) {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       handleSubmit();
     }
@@ -284,6 +284,10 @@ export function InputBar({ onPosted }: InputBarProps) {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setShowExpanded(false);
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
                 }}
                 placeholder="what's on your mind?"
                 className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
