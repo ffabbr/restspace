@@ -172,8 +172,8 @@ export function InputBar({ onPosted }: InputBarProps) {
           }`}
           style={{ boxShadow: "var(--input-shadow)" }}
         >
-          <div className={`flex ${isMultiline ? "items-end" : "items-center"} gap-3 pr-[11px] pb-[11px] ${
-            isMultiline ? "pl-4 pt-4" : "pl-5 pt-5"
+          <div className={`flex ${isMultiline ? "items-end" : "items-center"} gap-3 pr-[11px] ${
+            isMultiline ? "pl-4 pt-4 pb-[11px]" : "pl-5 py-1.5"
           }`}>
             <div className="flex-1 min-w-0 flex items-center">
               <textarea
