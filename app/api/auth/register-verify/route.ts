@@ -6,6 +6,8 @@ import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   const ip = getClientIp(req);
   const rl = rateLimit(`auth:${ip}`, 20, 60_000);

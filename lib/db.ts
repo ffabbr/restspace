@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 
 function pickDbUrl(): { url: string | undefined; source: string } {
   const candidates: Array<[string, string | undefined]> = [
@@ -100,10 +100,24 @@ async function getSqlite() {
   return _sqlite;
 }
 
-// --- Neon (production) ---
+// --- Postgres (production) ---
 
-function getNeon() {
-  return neon(DB_URL!);
+type PostgresClient = ReturnType<typeof postgres>;
+let _pg: PostgresClient | null = null;
+
+function getPostgres() {
+  if (_pg) return _pg;
+
+  // `prepare:false` is important for PgBouncer / Supabase pooler.
+  _pg = postgres(DB_URL!, {
+    max: 3,
+    prepare: false,
+    ssl: true,
+    connect_timeout: 10,
+    idle_timeout: 20,
+  });
+
+  return _pg;
 }
 
 // --- Table init ---
@@ -117,7 +131,7 @@ export async function ensureTables() {
     _tablesReady = true;
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT NOW())`;
   await sql`CREATE TABLE IF NOT EXISTS authenticators (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), credential_id TEXT UNIQUE NOT NULL, credential_public_key TEXT NOT NULL, counter BIGINT NOT NULL DEFAULT 0, transports TEXT, created_at TIMESTAMPTZ DEFAULT NOW())`;
   await sql`CREATE TABLE IF NOT EXISTS thoughts (id SERIAL PRIMARY KEY, content TEXT NOT NULL, font TEXT NOT NULL DEFAULT 'sans-serif', category TEXT NOT NULL DEFAULT 'thought', created_at TIMESTAMPTZ DEFAULT NOW())`;
@@ -133,7 +147,7 @@ export async function getThoughts(limit = 100, offset = 0): Promise<Thought[]> {
     const db = await getSqlite();
     return db.prepare("SELECT id, content, font, category, created_at || 'Z' as created_at FROM thoughts ORDER BY created_at DESC LIMIT ? OFFSET ?").all(limit, offset) as Thought[];
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   return (await sql`SELECT id, content, font, category, created_at FROM thoughts ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`) as Thought[];
 }
 
@@ -144,7 +158,7 @@ export async function createThought(content: string, font: string, category: str
     const stmt = db.prepare("INSERT INTO thoughts (content, font, category) VALUES (?, ?, ?) RETURNING id, content, font, category, created_at || 'Z' as created_at");
     return stmt.get(content, font, category) as Thought;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   const rows = await sql`INSERT INTO thoughts (content, font, category) VALUES (${content}, ${font}, ${category}) RETURNING id, content, font, category, created_at`;
   return rows[0] as Thought;
 }
@@ -156,7 +170,7 @@ export async function createUser(id: string) {
     db.prepare("INSERT OR IGNORE INTO users (id) VALUES (?)").run(id);
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`INSERT INTO users (id) VALUES (${id}) ON CONFLICT DO NOTHING`;
 }
 
@@ -174,7 +188,7 @@ export async function saveAuthenticator(
     db.prepare("INSERT INTO authenticators (id, user_id, credential_id, credential_public_key, counter, transports) VALUES (?, ?, ?, ?, ?, ?)").run(id, userId, credentialId, publicKey, counter, transports);
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`INSERT INTO authenticators (id, user_id, credential_id, credential_public_key, counter, transports) VALUES (${id}, ${userId}, ${credentialId}, ${publicKey}, ${counter}, ${transports})`;
 }
 
@@ -184,7 +198,7 @@ export async function getAuthenticatorsByUserId(userId: string): Promise<Authent
     const db = await getSqlite();
     return db.prepare("SELECT * FROM authenticators WHERE user_id = ?").all(userId) as AuthenticatorRow[];
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   return (await sql`SELECT * FROM authenticators WHERE user_id = ${userId}`) as AuthenticatorRow[];
 }
 
@@ -194,7 +208,7 @@ export async function getAuthenticatorByCredentialId(credentialId: string): Prom
     const db = await getSqlite();
     return (db.prepare("SELECT * FROM authenticators WHERE credential_id = ?").get(credentialId) as AuthenticatorRow) || null;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   const rows = await sql`SELECT * FROM authenticators WHERE credential_id = ${credentialId}`;
   return (rows[0] as AuthenticatorRow) || null;
 }
@@ -206,7 +220,7 @@ export async function updateAuthenticatorCounter(credentialId: string, counter: 
     db.prepare("UPDATE authenticators SET counter = ? WHERE credential_id = ?").run(counter, credentialId);
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`UPDATE authenticators SET counter = ${counter} WHERE credential_id = ${credentialId}`;
 }
 
@@ -217,7 +231,7 @@ export async function saveChallenge(sessionId: string, challenge: string, userId
     db.prepare("INSERT OR REPLACE INTO challenges (id, challenge, user_id) VALUES (?, ?, ?)").run(sessionId, challenge, userId ?? null);
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`INSERT INTO challenges (id, challenge, user_id) VALUES (${sessionId}, ${challenge}, ${userId ?? null}) ON CONFLICT (id) DO UPDATE SET challenge = ${challenge}, user_id = ${userId ?? null}`;
 }
 
@@ -227,7 +241,7 @@ export async function getChallenge(sessionId: string): Promise<ChallengeRow | nu
     const db = await getSqlite();
     return (db.prepare("SELECT * FROM challenges WHERE id = ?").get(sessionId) as ChallengeRow) || null;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   const rows = await sql`SELECT * FROM challenges WHERE id = ${sessionId}`;
   return (rows[0] as ChallengeRow) || null;
 }
@@ -239,6 +253,6 @@ export async function deleteChallenge(sessionId: string) {
     db.prepare("DELETE FROM challenges WHERE id = ?").run(sessionId);
     return;
   }
-  const sql = getNeon();
+  const sql = getPostgres();
   await sql`DELETE FROM challenges WHERE id = ${sessionId}`;
 }

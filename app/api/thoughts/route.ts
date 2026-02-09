@@ -3,6 +3,8 @@ import { getThoughts, createThought, getDbDebugInfo } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function GET(req: Request) {
   const ip = getClientIp(req);
   const rl = rateLimit(`thoughts-get:${ip}`, 60, 60_000);

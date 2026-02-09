@@ -15,7 +15,7 @@ An anonymous, minimal space for sharing thoughts. No usernames, no profiles — 
 - Next.js 15 (App Router)
 - Tailwind CSS
 - SimpleWebAuthn (passkey registration + login)
-- Neon Postgres (production) / SQLite (local dev)
+- Postgres (production) / SQLite (local dev)
 - JWT sessions via jose
 
 ## Local development
@@ -30,12 +30,12 @@ No database setup needed — SQLite is used automatically when `DATABASE_URL` is
 ## Deploy to Vercel
 
 1. Push to GitHub and import into Vercel.
-2. Add a Neon Postgres database from the Vercel Marketplace.
+2. Add a Postgres database (e.g. Supabase or Neon).
 3. Set environment variables:
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | Neon Postgres connection string (auto-set via integration) |
+| `DATABASE_URL` | Postgres connection string |
 | `JWT_SECRET` | Random secret string for session tokens |
 | `RP_ID` | Your domain, e.g. `myapp.vercel.app` |
 | `ORIGIN` | Full origin, e.g. `https://myapp.vercel.app` |

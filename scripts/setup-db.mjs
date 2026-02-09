@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 
 async function setup() {
   if (!process.env.DATABASE_URL) {
@@ -6,7 +6,12 @@ async function setup() {
     process.exit(1);
   }
 
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = postgres(process.env.DATABASE_URL, {
+    max: 1,
+    prepare: false,
+    ssl: true,
+    connect_timeout: 10,
+  });
 
   console.log("Creating tables...");
 
@@ -49,6 +54,8 @@ async function setup() {
   `;
 
   console.log("Tables created successfully!");
+
+  await sql.end({ timeout: 5 });
 }
 
 setup().catch(console.error);

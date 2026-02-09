@@ -4,6 +4,8 @@ import { saveChallenge, getDbDebugInfo } from "@/lib/db";
 import { cookies } from "next/headers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   const ip = getClientIp(req);
   const rl = rateLimit(`auth:${ip}`, 20, 60_000);
