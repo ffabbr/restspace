@@ -1,7 +1,33 @@
 import { neon } from "@neondatabase/serverless";
 
 const DB_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const DB_URL_SOURCE = process.env.DATABASE_URL
+  ? "DATABASE_URL"
+  : process.env.POSTGRES_URL
+    ? "POSTGRES_URL"
+    : "none";
 const USE_SQLITE = !DB_URL;
+
+let _loggedDbInfo = false;
+
+function logDbInfoOnce() {
+  if (_loggedDbInfo || process.env.NODE_ENV !== "production") return;
+  _loggedDbInfo = true;
+
+  if (!DB_URL) {
+    console.error("DB_URL missing; source=none");
+    return;
+  }
+
+  try {
+    const parsed = new URL(DB_URL);
+    console.error(
+      `DB_URL source=${DB_URL_SOURCE} host=${parsed.host} protocol=${parsed.protocol}`
+    );
+  } catch {
+    console.error(`DB_URL source=${DB_URL_SOURCE} (unparseable URL)`);
+  }
+}
 
 // --- Types ---
 
@@ -77,6 +103,7 @@ async function getSqlite() {
 // --- Neon (production) ---
 
 function getNeon() {
+  logDbInfoOnce();
   return neon(DB_URL!);
 }
 
