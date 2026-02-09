@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getThoughts, createThought, getDbDebugInfo } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { containsHateSpeech } from "@/lib/moderation";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,10 @@ export async function POST(req: Request) {
     const trimmed = content.trim();
     if (trimmed.length === 0 || trimmed.length > 2000) {
       return NextResponse.json({ error: "Content must be 1-2000 characters" }, { status: 400 });
+    }
+
+    if (containsHateSpeech(trimmed)) {
+      return NextResponse.json({ error: "Content contains language that isn't allowed on this platform" }, { status: 400 });
     }
 
     const validFonts = ["sans-serif", "serif", "mono"];

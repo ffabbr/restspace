@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ThoughtFeed, Category } from "@/components/ThoughtFeed";
 import { InputBar } from "@/components/InputBar";
+import { WelcomeModal } from "@/components/WelcomeModal";
 
 const categories: { key: Category; label: string }[] = [
   { key: "all", label: "all" },
@@ -17,6 +18,7 @@ export default function Home() {
 
   return (
     <main className="min-h-[100dvh]">
+      <WelcomeModal />
       {/* Desktop sidebar — positioned to the left of centered content */}
       <div className="hidden md:block fixed top-12 left-0 w-[calc(50%-theme(maxWidth.2xl)/2-1rem)] z-30">
         <div className="flex justify-end pr-10">

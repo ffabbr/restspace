@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import { containsHateSpeech } from "@/lib/moderation";
 
 const MAX_LENGTH = 2000;
 type Font = "sans-serif" | "serif" | "mono";
@@ -83,6 +84,11 @@ export function InputBar({ onPosted }: InputBarProps) {
   async function handleSubmit() {
     const trimmed = content.trim();
     if (!trimmed || sending) return;
+
+    if (containsHateSpeech(trimmed)) {
+      setError("this contains language that isn't allowed here");
+      return;
+    }
 
     setSending(true);
     setError("");
