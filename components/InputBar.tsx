@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 
 const MAX_LENGTH = 2000;
@@ -17,14 +17,32 @@ export function InputBar({ onPosted }: InputBarProps) {
   const [category, setCategory] = useState<Category>("thought");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [lineCount, setLineCount] = useState(1);
+  const [showExpanded, setShowExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const measureLines = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 22;
+    const lines = Math.round(el.scrollHeight / lineHeight);
+    setLineCount(lines);
+    el.style.height = el.scrollHeight + "px";
+  }, []);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + "px";
+    measureLines();
+  }, [content, measureLines]);
+
+  useEffect(() => {
+    if (showExpanded && expandedTextareaRef.current) {
+      const el = expandedTextareaRef.current;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
     }
-  }, [content]);
+  }, [showExpanded]);
 
   async function authenticate(): Promise<boolean> {
     try {
@@ -93,6 +111,7 @@ export function InputBar({ onPosted }: InputBarProps) {
 
       if (res.ok) {
         setContent("");
+        setShowExpanded(false);
         onPosted();
       } else {
         setError("something went wrong");
@@ -112,6 +131,28 @@ export function InputBar({ onPosted }: InputBarProps) {
   }
 
   const fontCls = font === "serif" ? "font-serif" : font === "mono" ? "font-mono" : "font-sans-serif";
+  const isMultiline = lineCount > 1;
+  const showMaximize = lineCount > 4;
+
+  const sendButton = (
+    <button
+      onClick={handleSubmit}
+      disabled={!content.trim() || sending}
+      className="shrink-0 w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--bg)]
+                 flex items-center justify-center transition-all duration-200
+                 hover:opacity-80 disabled:opacity-20 disabled:cursor-default"
+      aria-label="send"
+    >
+      {sending ? (
+        <div className="w-3.5 h-3.5 rounded-full border-2 border-current/30 border-t-current animate-spin" />
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      )}
+    </button>
+  );
 
   return (
     <div className="z-40">
@@ -119,42 +160,49 @@ export function InputBar({ onPosted }: InputBarProps) {
         {error && (
           <p className="text-center text-xs text-[var(--muted)] mb-2">{error}</p>
         )}
-        <div className="rounded-full bg-[var(--input-bg)] shadow-lg transition-all duration-200">
-          <div className="flex items-end gap-3 pl-5 pr-[11px] py-2.5">
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => {
-                if (e.target.value.length <= MAX_LENGTH) {
-                  setContent(e.target.value);
-                  setError("");
-                }
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="what's on your mind?"
-              rows={1}
-              className={`flex-1 bg-transparent text-[var(--text)] placeholder-[var(--muted)]
-                         text-[15px] resize-none leading-relaxed py-1
-                         focus:outline-none ${fontCls}`}
-              disabled={sending}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!content.trim() || sending}
-              className="shrink-0 w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--bg)]
-                         flex items-center justify-center transition-all duration-200
-                         hover:opacity-80 disabled:opacity-20 disabled:cursor-default"
-              aria-label="send"
-            >
-              {sending ? (
-                <div className="w-3.5 h-3.5 rounded-full border-2 border-current/30 border-t-current animate-spin" />
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
+        <div
+          className={`bg-[var(--input-bg)] shadow-lg transition-all duration-200 ${
+            isMultiline ? "rounded-2xl" : "rounded-full"
+          }`}
+        >
+          <div className={`flex items-end gap-3 pr-[11px] py-2.5 ${
+            isMultiline ? "pl-4" : "pl-5"
+          }`}>
+            <div className="relative flex-1 min-w-0">
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_LENGTH) {
+                    setContent(e.target.value);
+                    setError("");
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="what's on your mind?"
+                rows={1}
+                className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
+                           text-[15px] resize-none leading-relaxed py-1
+                           focus:outline-none ${fontCls}`}
+                disabled={sending}
+              />
+              {showMaximize && (
+                <button
+                  onClick={() => setShowExpanded(true)}
+                  className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center
+                             text-[var(--muted)] hover:text-[var(--text)] transition-colors duration-150"
+                  aria-label="expand editor"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 3 21 3 21 9" />
+                    <polyline points="9 21 3 21 3 15" />
+                    <line x1="21" y1="3" x2="14" y2="10" />
+                    <line x1="3" y1="21" x2="10" y2="14" />
+                  </svg>
+                </button>
               )}
-            </button>
+            </div>
+            {sendButton}
           </div>
         </div>
         <div className="flex items-center gap-3 px-2 pt-2">
@@ -190,6 +238,57 @@ export function InputBar({ onPosted }: InputBarProps) {
           </div>
         </div>
       </div>
+
+      {/* Expanded editor popup */}
+      {showExpanded && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowExpanded(false);
+          }}
+        >
+          <div className="w-full max-w-2xl mx-4 bg-[var(--input-bg)] rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <span className="text-xs text-[var(--muted)]">
+                {content.length}/{MAX_LENGTH}
+              </span>
+              <button
+                onClick={() => setShowExpanded(false)}
+                className="w-6 h-6 flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] transition-colors duration-150"
+                aria-label="close editor"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-5 pb-4">
+              <textarea
+                ref={expandedTextareaRef}
+                value={content}
+                onChange={(e) => {
+                  if (e.target.value.length <= MAX_LENGTH) {
+                    setContent(e.target.value);
+                    setError("");
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setShowExpanded(false);
+                }}
+                placeholder="what's on your mind?"
+                className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
+                           text-[15px] resize-none leading-relaxed min-h-[200px] max-h-[60vh]
+                           focus:outline-none ${fontCls}`}
+                disabled={sending}
+              />
+            </div>
+            <div className="flex justify-end px-5 pb-4">
+              {sendButton}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
