@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ThoughtFeed, Category } from "@/components/ThoughtFeed";
 import { InputBar } from "@/components/InputBar";
 import { WelcomeModal } from "@/components/WelcomeModal";
@@ -16,20 +16,54 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [filter, setFilter] = useState<Category>("all");
 
+  const desktopFilterRef = useRef<HTMLDivElement>(null);
+  const mobileFilterRef = useRef<HTMLDivElement>(null);
+  const [desktopPill, setDesktopPill] = useState({ top: 0, height: 0, opacity: 0 });
+  const [mobilePill, setMobilePill] = useState({ left: 0, width: 0, opacity: 0 });
+
+  const activeIndex = categories.findIndex((c) => c.key === filter);
+
+  useEffect(() => {
+    const updatePills = () => {
+      const dc = desktopFilterRef.current;
+      if (dc) {
+        const buttons = dc.querySelectorAll<HTMLButtonElement>("[data-filter]");
+        const btn = buttons[activeIndex];
+        if (btn) {
+          setDesktopPill({ top: btn.offsetTop, height: btn.offsetHeight, opacity: 1 });
+        }
+      }
+      const mc = mobileFilterRef.current;
+      if (mc) {
+        const buttons = mc.querySelectorAll<HTMLButtonElement>("[data-filter]");
+        const btn = buttons[activeIndex];
+        if (btn) {
+          setMobilePill({ left: btn.offsetLeft, width: btn.offsetWidth, opacity: 1 });
+        }
+      }
+    };
+    updatePills();
+  }, [activeIndex]);
+
   return (
     <main className="min-h-[100dvh]">
       <WelcomeModal />
       {/* Desktop sidebar — positioned to the left of centered content */}
       <div className="hidden md:block fixed top-12 left-0 w-[calc(50%-theme(maxWidth.2xl)/2-1rem)] z-30">
         <div className="flex justify-end pr-10">
-          <div className="flex flex-col gap-1">
+          <div ref={desktopFilterRef} className="relative flex flex-col gap-1">
+            <div
+              className="absolute left-0 right-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{ top: desktopPill.top, height: desktopPill.height, opacity: desktopPill.opacity }}
+            />
             {categories.map((c) => (
               <button
                 key={c.key}
+                data-filter
                 onClick={() => setFilter(c.key)}
-                className={`text-left text-[13px] py-1 transition-all duration-200 ${
+                className={`relative z-10 text-left text-[13px] py-1.5 px-3 rounded-full transition-colors duration-200 ${
                   filter === c.key
-                    ? "text-[var(--text)]"
+                    ? "text-[var(--pill-text)]"
                     : "text-[var(--muted)] hover:text-[var(--text)]"
                 }`}
               >
@@ -40,17 +74,26 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 pb-12">
-        <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
-        {/* Mobile filter row */}
-        <div className="flex items-center gap-1 mb-8 mt-4 md:hidden">
+      <div className="max-w-2xl mx-auto px-4 pt-12 pb-32 md:pb-12">
+        {/* Mobile filter row at top */}
+        <div ref={mobileFilterRef} className="relative flex items-center gap-1 mb-8 md:hidden">
+          <div
+            className="absolute top-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{
+              left: mobilePill.left,
+              width: mobilePill.width,
+              height: "100%",
+              opacity: mobilePill.opacity,
+            }}
+          />
           {categories.map((c) => (
             <button
               key={c.key}
+              data-filter
               onClick={() => setFilter(c.key)}
-              className={`px-3 py-1.5 rounded-full text-[13px] transition-all duration-200 ${
+              className={`relative z-10 px-3 py-1.5 rounded-full text-[13px] transition-colors duration-200 ${
                 filter === c.key
-                  ? "bg-[var(--accent)] text-[var(--bg)]"
+                  ? "text-[var(--pill-text)]"
                   : "text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
@@ -58,6 +101,14 @@ export default function Home() {
             </button>
           ))}
         </div>
+
+        {/* InputBar: fixed at bottom on mobile, normal flow on desktop */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg)] px-4 md:static md:bg-transparent md:px-0">
+          <div className="max-w-2xl mx-auto md:max-w-none">
+            <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
+          </div>
+        </div>
+
         <ThoughtFeed refreshKey={refreshKey} filter={filter} />
       </div>
     </main>

@@ -167,11 +167,12 @@ export function InputBar({ onPosted }: InputBarProps) {
           <p className="text-center text-xs text-[var(--muted)] mb-2">{error}</p>
         )}
         <div
-          className={`bg-[var(--input-bg)] shadow-lg transition-all duration-200 ${
+          className={`bg-[var(--input-bg)] transition-all duration-200 ${
             isMultiline ? "rounded-[1.4rem]" : "rounded-full"
           }`}
+          style={{ boxShadow: "var(--input-shadow)" }}
         >
-          <div className={`flex items-end gap-3 pr-[11px] py-2.5 ${
+          <div className={`flex ${isMultiline ? "items-end" : "items-center"} gap-3 pr-[11px] py-1.5 ${
             isMultiline ? "pl-4" : "pl-5"
           }`}>
             <div className="flex-1 min-w-0">
@@ -188,12 +189,12 @@ export function InputBar({ onPosted }: InputBarProps) {
                 placeholder="what's on your mind?"
                 rows={1}
                 className={`w-full bg-transparent text-[var(--text)] placeholder-[var(--muted)]
-                           text-[15px] resize-none leading-relaxed py-1
+                           text-[15px] resize-none leading-relaxed py-0.5
                            focus:outline-none ${fontCls}`}
                 disabled={sending}
               />
             </div>
-            <div className="flex flex-col items-center gap-1">
+            <div className={`flex flex-col items-center ${showMaximize ? "justify-between self-stretch" : ""}`}>
               {showMaximize && (
                 <button
                   onClick={() => setShowExpanded(true)}
@@ -219,9 +220,9 @@ export function InputBar({ onPosted }: InputBarProps) {
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`px-2.5 py-1 rounded-full text-[11px] transition-all duration-150 ${
+                className={`px-2.5 py-1 text-[11px] transition-colors duration-150 ${
                   category === c
-                    ? "bg-[var(--accent)] text-[var(--bg)]"
+                    ? "text-[var(--text)]"
                     : "text-[var(--muted)] hover:text-[var(--text)]"
                 }`}
               >
@@ -234,9 +235,9 @@ export function InputBar({ onPosted }: InputBarProps) {
               <button
                 key={f}
                 onClick={() => setFont(f)}
-                className={`px-2 py-1 rounded-full text-[11px] transition-all duration-150 ${
+                className={`px-2 py-1 text-[11px] transition-colors duration-150 ${
                   font === f
-                    ? "bg-[var(--accent)] text-[var(--bg)]"
+                    ? "text-[var(--text)]"
                     : "text-[var(--muted)] hover:text-[var(--text)]"
                 } ${f === "serif" ? "font-serif" : f === "mono" ? "font-mono" : "font-sans-serif"}`}
               >
