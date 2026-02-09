@@ -149,9 +149,13 @@ export function ThoughtFeed({
 
   if (thoughts.length === 0) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-[var(--muted)] text-sm italic">
-          no thoughts yet. be the first.
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+        <p className="text-[var(--muted)] text-sm">
+          nothing here yet. be the first.
         </p>
       </div>
     );
@@ -164,11 +168,15 @@ export function ThoughtFeed({
   return (
     <div>
       {!hasVisible && (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-[var(--muted)] text-sm italic">
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          <p className="text-[var(--muted)] text-sm">
             {filter === "diary"
-              ? "no diary entries yet."
-              : `no ${filter}s yet.`}
+              ? "no diary entries yet"
+              : `no ${filter}s yet`}
           </p>
         </div>
       )}

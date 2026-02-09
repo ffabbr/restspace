@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ThoughtFeed, Category } from "@/components/ThoughtFeed";
 import { InputBar } from "@/components/InputBar";
 import { WelcomeModal } from "@/components/WelcomeModal";
@@ -12,9 +12,28 @@ const categories: { key: Category; label: string }[] = [
   { key: "aspiration", label: "aspirations" },
 ];
 
+const validFilters = new Set<string>(["all", "thought", "diary", "aspiration"]);
+
+function getInitialFilter(): Category {
+  if (typeof window === "undefined") return "all";
+  const param = new URLSearchParams(window.location.search).get("filter");
+  return param && validFilters.has(param) ? (param as Category) : "all";
+}
+
 export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [filter, setFilter] = useState<Category>("all");
+  const [filter, setFilterState] = useState<Category>(getInitialFilter);
+
+  const setFilter = useCallback((f: Category) => {
+    setFilterState(f);
+    const url = new URL(window.location.href);
+    if (f === "all") {
+      url.searchParams.delete("filter");
+    } else {
+      url.searchParams.set("filter", f);
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   const desktopFilterRef = useRef<HTMLDivElement>(null);
   const mobileFilterRef = useRef<HTMLDivElement>(null);
