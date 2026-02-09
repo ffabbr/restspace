@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const options = await generateRegistrationOptions({
       rpName: "restspace",
       rpID: getRpId(),
-      userName: `anon-${userId.slice(0, 8)}`,
+      userName: "restspace-user",
       attestationType: "none",
       excludeCredentials: existingAuths.map((a) => ({
         id: a.credential_id,
