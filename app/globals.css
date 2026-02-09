@@ -11,8 +11,12 @@
   --accent: #1a1a1a;
   --accent-hover: #333333;
   --input-bg: #ffffff;
-  --pill-bg: #c9888f;
-  --pill-text: #ffffff;
+  --pill-bg: #fcf5e8;
+  --pill-text: #c36251;
+  --send-bg: #c36251;
+  --send-text: #ffffff;
+  --selection-bg: #fcf5e8;
+  --selection-text: #c36251;
   --input-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
@@ -28,6 +32,10 @@
     --input-bg: #111111;
     --pill-bg: #e5e5e5;
     --pill-text: #0a0a0a;
+    --send-bg: #e5e5e5;
+    --send-text: #0a0a0a;
+    --selection-bg: var(--text);
+    --selection-text: var(--bg);
     --input-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
 }
@@ -53,8 +61,8 @@ body {
 }
 
 ::selection {
-  background-color: var(--text);
-  color: var(--bg);
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 ::-webkit-scrollbar {

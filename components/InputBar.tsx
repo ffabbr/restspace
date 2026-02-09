@@ -144,7 +144,7 @@ export function InputBar({ onPosted }: InputBarProps) {
     <button
       onClick={handleSubmit}
       disabled={!content.trim() || sending}
-      className="shrink-0 w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--bg)]
+      className="shrink-0 w-8 h-8 rounded-full bg-[var(--send-bg)] text-[var(--send-text)]
                  flex items-center justify-center transition-all duration-200
                  hover:opacity-80 disabled:opacity-20 disabled:cursor-default"
       aria-label="send"
@@ -180,8 +180,9 @@ export function InputBar({ onPosted }: InputBarProps) {
                 ref={textareaRef}
                 value={content}
                 onChange={(e) => {
-                  if (e.target.value.length <= MAX_LENGTH) {
-                    setContent(e.target.value);
+                  const val = e.target.value.replace(/\n{3,}/g, "\n\n");
+                  if (val.length <= MAX_LENGTH) {
+                    setContent(val);
                     setError("");
                   }
                 }}
@@ -277,8 +278,9 @@ export function InputBar({ onPosted }: InputBarProps) {
                 ref={expandedTextareaRef}
                 value={content}
                 onChange={(e) => {
-                  if (e.target.value.length <= MAX_LENGTH) {
-                    setContent(e.target.value);
+                  const val = e.target.value.replace(/\n{3,}/g, "\n\n");
+                  if (val.length <= MAX_LENGTH) {
+                    setContent(val);
                     setError("");
                   }
                 }}
