@@ -175,7 +175,7 @@ export function InputBar({ onPosted }: InputBarProps) {
           <div className={`flex ${isMultiline ? "items-end" : "items-center"} gap-3 pr-[11px] py-1.5 ${
             isMultiline ? "pl-4" : "pl-5"
           }`}>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex items-center">
               <textarea
                 ref={textareaRef}
                 value={content}

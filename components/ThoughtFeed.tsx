@@ -189,9 +189,9 @@ export function ThoughtFeed({
                 paddingBottom: visible ? "1.25rem" : "0",
                 transform: visible ? "translateY(0)" : "translateY(-8px)",
                 transition:
-                  "opacity 0.3s ease, max-height 0.4s ease, padding 0.3s ease, transform 0.3s ease",
+                  "opacity 0.3s ease, max-height 0.4s ease, padding 0.3s ease, transform 0.3s ease, border-bottom-width 0.3s ease",
                 overflow: "hidden",
-                borderColor: visible ? undefined : "transparent",
+                borderBottomWidth: visible ? undefined : 0,
               }}
             >
               <p

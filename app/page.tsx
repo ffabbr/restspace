@@ -74,38 +74,34 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 pb-32 md:pb-12">
-        {/* Mobile filter row at top */}
-        <div ref={mobileFilterRef} className="relative flex items-center gap-1 mb-8 md:hidden">
-          <div
-            className="absolute top-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-            style={{
-              left: mobilePill.left,
-              width: mobilePill.width,
-              height: "100%",
-              opacity: mobilePill.opacity,
-            }}
-          />
-          {categories.map((c) => (
-            <button
-              key={c.key}
-              data-filter
-              onClick={() => setFilter(c.key)}
-              className={`relative z-10 px-3 py-1.5 rounded-full text-[13px] transition-colors duration-200 ${
-                filter === c.key
-                  ? "text-[var(--pill-text)]"
-                  : "text-[var(--muted)] hover:text-[var(--text)]"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-
-        {/* InputBar: fixed at bottom on mobile, normal flow on desktop */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg)] px-4 md:static md:bg-transparent md:px-0">
-          <div className="max-w-2xl mx-auto md:max-w-none">
-            <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
+      <div className="max-w-2xl mx-auto px-4 pt-12 pb-12">
+        {/* InputBar + mobile filters: sticky on mobile, normal flow on desktop */}
+        <div className="sticky top-0 z-40 bg-[var(--bg)] md:static md:bg-transparent">
+          <InputBar onPosted={() => setRefreshKey((k) => k + 1)} />
+          <div ref={mobileFilterRef} className="relative flex items-center gap-1 pb-4 md:hidden">
+            <div
+              className="absolute top-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{
+                left: mobilePill.left,
+                width: mobilePill.width,
+                height: "calc(100% - 1rem)",
+                opacity: mobilePill.opacity,
+              }}
+            />
+            {categories.map((c) => (
+              <button
+                key={c.key}
+                data-filter
+                onClick={() => setFilter(c.key)}
+                className={`relative z-10 px-3 py-1.5 rounded-full text-[13px] transition-colors duration-200 ${
+                  filter === c.key
+                    ? "text-[var(--pill-text)]"
+                    : "text-[var(--muted)] hover:text-[var(--text)]"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
           </div>
         </div>
 

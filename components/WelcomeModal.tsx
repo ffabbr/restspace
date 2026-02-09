@@ -8,7 +8,7 @@ const pages = [
   {
     title: "a quiet place to think",
     description:
-      "welcome to a minimal space for sharing thoughts, reflections, and aspirations — no likes, no followers, just words.",
+      "welcome to a minimal space for sharing thoughts, reflections, and aspirations. no likes, no followers, just words.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -21,7 +21,7 @@ const pages = [
   {
     title: "make it yours",
     description:
-      "choose between thoughts, diary entries, and aspirations. pick a font that fits your mood — sans-serif, serif, or mono.",
+      "choose between thoughts, diary entries, and aspirations. pick a font that fits your mood. sans-serif, serif, or mono.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
@@ -32,7 +32,7 @@ const pages = [
   {
     title: "secure & simple",
     description:
-      "sign in with a passkey — no passwords, no emails. your identity stays on your device. just tap and you're in.",
+      "sign in with a passkey. no passwords, no emails. your identity stays on your device. just tap and you're in.",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
