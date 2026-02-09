@@ -162,7 +162,7 @@ export function InputBar({ onPosted }: InputBarProps) {
 
   return (
     <div className="z-40">
-      <div className="pt-3 pb-3">
+      <div className="pb-3">
         {error && (
           <p className="text-center text-xs text-[var(--muted)] mb-2">{error}</p>
         )}
