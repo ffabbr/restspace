@@ -8,6 +8,9 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      screens: {
+        desktop: "820px",
+      },
       colors: {
         rose: {
           50: "#fff5f5",

@@ -67,37 +67,35 @@ export default function Home() {
   return (
     <main className="min-h-[100dvh]">
       <WelcomeModal />
-      {/* Desktop sidebar — positioned to the left of centered content */}
-      <div className="hidden md:block fixed top-12 left-0 w-[calc(50%-theme(maxWidth.2xl)/2-1rem)] z-30">
-        <div className="flex justify-end pr-10">
-          <div ref={desktopFilterRef} className="relative flex flex-col gap-1">
-            <div
-              className="absolute left-0 right-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ top: desktopPill.top, height: desktopPill.height, opacity: desktopPill.opacity }}
-            />
-            {categories.map((c) => (
-              <button
-                key={c.key}
-                data-filter
-                onClick={() => setFilter(c.key)}
-                className={`relative z-10 text-left text-[13px] py-1.5 px-3 rounded-full transition-colors duration-200 ${
-                  filter === c.key
-                    ? "text-[var(--pill-text)]"
-                    : "text-[var(--muted)] hover:text-[var(--text)]"
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
+      {/* Desktop sidebar */}
+      <div className="hidden desktop:block fixed top-12 left-4 z-30">
+        <div ref={desktopFilterRef} className="relative flex flex-col gap-1">
+          <div
+            className="absolute left-0 right-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{ top: desktopPill.top, height: desktopPill.height, opacity: desktopPill.opacity }}
+          />
+          {categories.map((c) => (
+            <button
+              key={c.key}
+              data-filter
+              onClick={() => setFilter(c.key)}
+              className={`relative z-10 text-left text-[13px] py-1.5 px-3 rounded-full transition-colors duration-200 ${
+                filter === c.key
+                  ? "text-[var(--pill-text)]"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 pb-12">
+      <div className="max-w-2xl px-4 pt-12 pb-12 mx-auto desktop:ml-[140px] desktop:mr-auto">
         {/* InputBar + mobile filters: sticky on mobile, normal flow on desktop */}
-        <div className="sticky top-0 z-40 bg-[var(--bg)] md:static md:bg-transparent">
+        <div className="sticky top-0 z-40 bg-[var(--bg)] desktop:static desktop:bg-transparent">
           <InputBar onPosted={() => setRefreshKey((k) => k + 1)} activeFilter={filter} />
-          <div ref={mobileFilterRef} className="relative flex items-center gap-1 pb-4 md:hidden">
+          <div ref={mobileFilterRef} className="relative flex items-center gap-1 pb-4 desktop:hidden">
             <div
               className="absolute top-0 bg-[var(--pill-bg)] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{

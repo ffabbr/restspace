@@ -64,17 +64,27 @@ function EditableThought({
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(thought.content);
   const [saving, setSaving] = useState(false);
+  const [initialHeight, setInitialHeight] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLParagraphElement>(null);
+
+  function startEditing() {
+    if (contentRef.current) {
+      setInitialHeight(contentRef.current.offsetHeight);
+    }
+    setEditing(true);
+  }
 
   useEffect(() => {
     if (editing && textareaRef.current) {
       const el = textareaRef.current;
+      if (initialHeight) {
+        el.style.height = initialHeight + "px";
+      }
       el.focus();
       el.setSelectionRange(el.value.length, el.value.length);
-      el.style.height = "auto";
-      el.style.height = el.scrollHeight + "px";
     }
-  }, [editing]);
+  }, [editing, initialHeight]);
 
   async function handleSave() {
     const trimmed = editContent.trim();
@@ -125,6 +135,7 @@ function EditableThought({
             onChange={(e) => {
               const val = e.target.value.replace(/\n{3,}/g, "\n\n");
               if (val.length <= 2000) setEditContent(val);
+              setInitialHeight(null);
               if (textareaRef.current) {
                 textareaRef.current.style.height = "auto";
                 textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
@@ -166,6 +177,7 @@ function EditableThought({
       ) : (
         <div className="group">
           <p
+            ref={contentRef}
             className={`text-[var(--text)] leading-relaxed whitespace-pre-wrap break-words text-[15px] ${fontClass(
               thought.font
             )}`}
@@ -179,7 +191,7 @@ function EditableThought({
             </time>
             {isOwner && (
               <button
-                onClick={() => setEditing(true)}
+                onClick={startEditing}
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[var(--muted)] hover:text-[var(--text)]"
                 aria-label="edit"
               >
@@ -351,7 +363,7 @@ export function ThoughtFeed({
           </p>
         </div>
       )}
-      <div className="space-y-0">
+      <div className="space-y-0 px-[18px]">
         {thoughts.map((thought) => (
           <EditableThought
             key={thought.id}

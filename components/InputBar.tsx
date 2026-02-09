@@ -270,10 +270,12 @@ export function InputBar({ onPosted, activeFilter }: InputBarProps) {
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                className={`rounded-full transition-all duration-150 ${
                   color === c ? "ring-2 ring-offset-1 ring-[var(--muted)]" : "hover:scale-110"
                 }`}
                 style={{
+                  width: 10,
+                  height: 10,
                   backgroundColor: c === "default" ? "var(--text)" : colorStyles[c],
                 }}
                 aria-label={c}
@@ -374,10 +376,12 @@ export function InputBar({ onPosted, activeFilter }: InputBarProps) {
                   <button
                     key={c}
                     onClick={() => setColor(c)}
-                    className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                    className={`rounded-full transition-all duration-150 ${
                       color === c ? "ring-2 ring-offset-1 ring-white/60" : "hover:scale-110"
                     }`}
                     style={{
+                      width: 10,
+                      height: 10,
                       backgroundColor: c === "default" ? "#e5e5e5" : colorStyles[c],
                     }}
                     aria-label={c}
