@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const validFonts = ["sans-serif", "serif", "mono"];
     const safeFont = validFonts.includes(font) ? font : "sans-serif";
 
-    const validCategories = ["thought", "diary", "aspiration"];
+    const validCategories = ["thought", "diary", "affirmation"];
     const safeCategory = validCategories.includes(category) ? category : "thought";
 
     const validColors = ["default", "rose", "blue"];

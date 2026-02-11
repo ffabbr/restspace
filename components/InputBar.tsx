@@ -6,7 +6,7 @@ import { containsHateSpeech } from "@/lib/moderation";
 
 const MAX_LENGTH = 2000;
 type Font = "sans-serif" | "serif" | "mono";
-type Category = "thought" | "diary" | "aspiration";
+type Category = "thought" | "diary" | "affirmation";
 type Color = "default" | "rose" | "blue";
 
 const colorStyles: Record<Color, string | undefined> = {
@@ -17,7 +17,7 @@ const colorStyles: Record<Color, string | undefined> = {
 
 interface InputBarProps {
   onPosted: () => void;
-  activeFilter?: "all" | "thought" | "diary" | "aspiration";
+  activeFilter?: "all" | "thought" | "diary" | "affirmation";
 }
 
 export function InputBar({ onPosted, activeFilter }: InputBarProps) {
@@ -236,7 +236,7 @@ export function InputBar({ onPosted, activeFilter }: InputBarProps) {
         </div>
         <div className="flex items-center gap-3 px-2 pt-2">
           <div className="flex items-center gap-1">
-            {(["thought", "diary", "aspiration"] as const).map((c) => (
+            {(["thought", "diary", "affirmation"] as const).map((c) => (
               <button
                 key={c}
                 onClick={() => setCategory(c)}
@@ -342,7 +342,7 @@ export function InputBar({ onPosted, activeFilter }: InputBarProps) {
             </div>
             <div className="flex items-center gap-3 px-2 pt-3">
               <div className="flex items-center gap-1">
-                {(["thought", "diary", "aspiration"] as const).map((c) => (
+                {(["thought", "diary", "affirmation"] as const).map((c) => (
                   <button
                     key={c}
                     onClick={() => setCategory(c)}

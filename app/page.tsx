@@ -9,10 +9,10 @@ const categories: { key: Category; label: string }[] = [
   { key: "all", label: "all" },
   { key: "thought", label: "thoughts" },
   { key: "diary", label: "diary" },
-  { key: "aspiration", label: "aspirations" },
+  { key: "affirmation", label: "affirmations" },
 ];
 
-const validFilters = new Set<string>(["all", "thought", "diary", "aspiration"]);
+const validFilters = new Set<string>(["all", "thought", "diary", "affirmation"]);
 
 export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
