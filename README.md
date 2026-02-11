@@ -5,7 +5,7 @@ An anonymous, minimal space for sharing thoughts. No usernames, no profiles — 
 ## Features
 
 - **Anonymous passkey auth** — no email, no password, no personal info. Just a device-bound passkey.
-- **Categories** — classify posts as thoughts, diary entries, or aspirations. Filter from the sidebar.
+- **Categories** — classify posts as thoughts, diary entries, or affirmations. Filter from the sidebar.
 - **Per-post fonts** — each post carries its own font choice (sans, serif, mono).
 - **Dark mode** — follows system preference automatically.
 - **Real-time polling** — feed refreshes every 15 seconds.

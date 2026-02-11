@@ -18,7 +18,7 @@ const colorVars: Record<string, string | undefined> = {
   blue: "var(--color-blue)",
 };
 
-export type Category = "all" | "thought" | "diary" | "aspiration";
+export type Category = "all" | "thought" | "diary" | "affirmation";
 
 const PAGE_SIZE = 30;
 
